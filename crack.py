@@ -10,12 +10,14 @@ class crack:
 
     def parse(self):
         #Create Parser
-        parser = argparse.ArgumentParser()
+        self.parser = argparse.ArgumentParser()
         #Load default arguments
-        parser.add_argument("-f", "--f",  help="regex for the flag format")
-        parser.add_argument()
+
+        self.parser.add_argument("-f", "--f", type=str, help="regex for the flag format")
+        self.parser.add_argument("-m", "--mod", type=str, help="module to load")
+        
         #Parse arguments
-        parser.parse_args()
+        self.config = vars(self.parser.parse_args())
 
 if __name__ == "__main__":
     crack()
