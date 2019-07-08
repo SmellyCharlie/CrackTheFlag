@@ -41,6 +41,7 @@ class CrackTheFlag:
 
     def crack(self):
         try:
+            #TODO accept uppercase lol
             mod = self.modules.get(self.config["mod"])
             mod.Module(self)
         except:
