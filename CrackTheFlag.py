@@ -19,7 +19,7 @@ class CrackTheFlag:
     def load_modules(self):
         
         for file in glob.glob('mods/*/*[a-zA-Z0-9].py'):
-            self.modules[file.split("/")[2][:-3]] = importlib.import_module(file.replace("/", ".")[:-3])
+            self.modules[file.replace("/", ".").replace("\\", ".").split(".")[2]] = importlib.import_module(file.replace("/", ".").replace("\\", ".")[:-3])
 
     def parse(self):
         

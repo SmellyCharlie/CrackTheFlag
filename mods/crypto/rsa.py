@@ -1,4 +1,3 @@
-from Crypto.Util.number import inverse
 import binascii
 from typing import Tuple, Iterator, Iterable, Optional
 import owiener
@@ -42,6 +41,20 @@ def contfrac_to_rational_iter(contfrac: Iterable[int]) -> Iterator[Tuple[int, in
         n0, d0 = n1, d1
         n1, d1 = n, d
 
+def egcd(a, b):
+    if a == 0:
+        return (b, 0, 1)
+    else:
+        g, y, x = egcd(b % a, a)
+        return (g, x - (b // a) * y, y)
+
+def inverse(a, m):
+    g, x, y = egcd(a, m)
+    if g != 1:
+        raise Exception('modular inverse does not exist')
+    else:
+        return x % m
+
 class Module():
 
     def __init__(self, crack):
@@ -54,6 +67,9 @@ class Module():
         parser.add_argument('--rsa-n', default="", type=str, help='modulus value for RSA cryptography')
         parser.add_argument('--rsa-q', default="", type=str, help='q factor for RSA cryptography')
         parser.add_argument('--rsa-p', default="", type=str, help='p factor for RSA cryptography')
+        parser.add_argument('--rsa-dq', default="", type=str, help='dq factor for RSA-CRT cryptography')
+        parser.add_argument('--rsa-dp', default="", type=str, help='dp factor for RSA-CRT cryptography')
+        parser.add_argument('--rsa-qInv', default="", type=str, help='qInv for RSA-CRT cryptography')
         parser.add_argument('--rsa-d', default="", type=str, help='d value for RSA cryptography')
         parser.add_argument('--rsa-c', default="", type=str, help='cipher text for RSA cryptography')
         parser.add_argument('--rsa-phi', default="", type=str, help='phi value for RSA cryptography')
@@ -67,6 +83,9 @@ class Module():
         e = parse_int(crack.config["rsa_e"])
         d = parse_int(crack.config["rsa_d"])
         phi = parse_int(crack.config["rsa_phi"])
+        dq = parse_int(crack.config["rsa_dq"])
+        dp = parse_int(crack.config["rsa_dp"])
+        qInv = parse_int(crack.config["rsa_qInv"])
 
         if c == -1:
             print("You didn't give a cipher text!")
@@ -101,13 +120,15 @@ class Module():
             p = n/q
 
         ### Attempt calcualting phi, includes square N ###
-        if p != -1 and q != -1 and phi != -1:
+        if p != -1 and q != -1 and phi == -1:
             if q == p:
                 phi = p * (p-1)
             else:     
                 phi = (p-1) * (q - 1)
         
         ### Attempt Classical Decryption ###
+        print("\nAttempting Classical RSA")
+
         if d == -1 and phi != -1: 
             d = inverse(e, phi)
 
@@ -116,11 +137,30 @@ class Module():
             print_message(m)
             return
 
-        print("Classic RSA Failed")
+        print("    -Classic RSA Failed")
+
+        #Basic CRT
+
+        if dq == -1 and e != -1 and q != -1:
+            dq = inverse(e, q-1)
+
+        if dp == -1 and e != -1 and p != -1:
+            dp = inverse(e, p-1)
+
+        if p != -1 and q != -1:
+            qInv = inverse(q, p)
+
+        if qInv != -1 and p != -1 and q != -1 and dp != -1 and dq != -1:
+            m1 = pow(c, dp, p)
+            m2 = pow(c, dq, q)
+            h = qInv*((m1-m2)%p)
+            print_message(m2 + h*q)
 
         #Small E
 
-        if n!=-1 and e !=-1 and e < 100:
+        print("\nAttempting Small E Attack")
+
+        if e !=-1 and e < 25:
             low = 0
             high = c
             while low < high:
@@ -133,29 +173,34 @@ class Module():
                 print_message(low)
                 return
             
-        print("Small E attack Failed")
+        print("    -Small E attack Failed")
 
         #Oweiner
+
+        print("\nAttempting Oweiner")
         if n != -1 and e != -1:
             d = owiener.attack(e,n)
             if d is None:
                 d = -1
-                print("Oweiner failed")
+                print("    -Oweiner failed")
             else:
                 print_message(pow(c, d, n))
                 return
 
         #Implementation of Oweine for a few bits
-        print("Attempting Wiener+ Algo")
+        print("\nAttempting Wiener+ Algo")
         if n != -1 and e != -1:
             temp_m = 12345
             temp_c = pow(temp_m, e, n)
             q0 = 1
             f_ = rational_to_contfrac(e, n)
-            for i in contfrac_to_rational_iter(f_):
-                k = i[0]
+            rationals = list(contfrac_to_rational_iter(f_))
+            print(len(rationals))
+            for i in rationals:
+                print(i)
                 q1 = i[1]
                 for r in range(30):
+                    print(r)
                     for s in range(30):
                         d = r*q1 + s*q0
                         m1 = pow(temp_c, d, n)
@@ -163,9 +208,9 @@ class Module():
                             print_message(pow(c, d, n))
                             return
                 q0 = q1
-        print("Wiener+ Failed")
+        print("    -Wiener+ Failed")
 
         #TODO Implement: the ^0.25 version, eh it's lokey borhan but like fake, CRT
         
 def print_message(m):
-    print("Flag found!: " + bytes.fromhex(str(hex(m))[2:]).decode('utf-8'))
+    print("    -Flag found!: " + bytes.fromhex(str(hex(m))[2:]).decode('utf-8'))
