@@ -79,7 +79,6 @@ class Module():
             f = FactorDB(n)
             if not f.connect().json()['status'] == 'C':  
                 primes = f.get_factor_list()
-                print(primes)
                 if len(primes) == 1:
                     phi = n-1
                 elif len(primes) == 2:
@@ -114,7 +113,6 @@ class Module():
 
         if n != -1 and d != -1:
             m = pow(c, d, n)
-            print(m)
             print_message(m)
             return
 
