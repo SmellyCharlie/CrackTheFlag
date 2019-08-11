@@ -285,4 +285,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# VSCode Generated
+./vscode
 # End of https://www.gitignore.io/api/python,pycharm+all,vscode,windows,macos,linux
