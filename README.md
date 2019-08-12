@@ -5,10 +5,17 @@ from CrackTheFlag import CrackTheFlaglib
 
 c = CrackTheFlaglib.Crypto.caesar()
 ```
- ## Goals
+## To-Do
+- [ ] Create a development page to allow other people to help contribute to the project
+- [ ] Restructure the file setup to make it more versatile
+- [ ] Get basic modules like data handling that can be used in other modules
+- [ ] Modules to interact with websites and shells dynamically  
+
+ ## End Goals
 - [ ] Create a standard library with accessible modules to use while scripting
 similar to https://github.com/Gallopsled/pwntools
 - [ ] Create a **text-editor/REPL** hybrid with a custom lexer for automatic syntax hightlighting, autocompletion, etc.
+- [ ] Provide a framework to solve any CTF problem
 
 ## Pwntools *vs.* CrackTheFlag
 Although it mostly sounds like this project is a straight rip of pwntools, there are a _few **key** differences_ between the two.
